@@ -56,7 +56,7 @@ export class WidgetPage {
   }
 
   async handleCookieConsent(): Promise<void> {
-    const cookieButton = this.page.getByText("OK", {exact: true}).first();
+    const cookieButton = this.page.getByText("ОК", {exact: true}).first();
     if (await cookieButton.isVisible().catch(() => false)) {
       await cookieButton.click();
       await expect(cookieButton).toBeHidden();

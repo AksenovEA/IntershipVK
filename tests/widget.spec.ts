@@ -21,4 +21,11 @@ test.describe('Uchi.ru widget', () => {
     await widgetPage.clickWriteToUs();
     await expect(widgetPage.title()).toHaveText('Связь с поддержкой');
   });
+
+  test('shows at least one popular article after opening widget', async () => {
+    await widgetPage.openWidget();
+    const articles = widgetPage.popularArticles();
+    await expect(articles.first()).toBeVisible();
+    expect(await articles.count()).toBeGreaterThan(0);
+  })
 });
