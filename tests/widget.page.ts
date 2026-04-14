@@ -1,43 +1,65 @@
-import {Page} from "@playwright/test";
+import { expect, Locator, Page } from '@playwright/test';
 
-enum WidgetPageSelectors {
-    WRAPPER = '.sc-dino-typography-h > [class^=widget__]',
-    WIDGET_BODY = '[class^=widgetWrapper] > [class^=widget__]',
-    HEADER_TEXT = 'header h5',
-    BUTTON_OPEN = '[data-test=openWidget]',
-    BUTTON_WRITE_TO_US = '[class^=btn]',
-    ARTICLE_POPULAR_TITLE = '[class^=popularTitle__]',
-    ARTICLE_POPULAR_LIST = `${ARTICLE_POPULAR_TITLE} + ul[class^=articles__]`,
-    ARTICLE_POPULAR_LIST_ITEM = `${ARTICLE_POPULAR_LIST} > li`,
-}
+const WidgetPageSelectors = {
+  WRAPPER: '.sc-dino-typography-h > [class^="widget__"]',
+  WIDGET_BODY: '[class^="widgetWrapper"] > [class^="widget__"]',
+  HEADER_TEXT: 'header h5',
+  BUTTON_OPEN: '[data-test="openWidget"]',
+  ARTICLE_POPULAR_TITLE: '[class^="popularTitle__"]',
+  ARTICLE_POPULAR_LIST: '[class^="popularTitle__"] ~ ul[class^="articles__"]',
+  ARTICLE_POPULAR_LIST_ITEM: '[class^="popularTitle__"] ~ ul[class^="articles__"] > li',
+} as const;
 
 export class WidgetPage {
-    static selector = WidgetPageSelectors;
+  static selector = WidgetPageSelectors;
 
-    constructor(protected page: Page) {}
+  constructor(private readonly page: Page) {}
 
-    wrapper() {
-        return this.page.locator(WidgetPage.selector.WRAPPER)
+  wrapper(): Locator {
+    return this.page.locator(WidgetPage.selector.WRAPPER);
+  }
+
+  widgetBody(): Locator {
+    return this.page.locator(WidgetPage.selector.WIDGET_BODY);
+  }
+
+  title(): Locator {
+    return this.wrapper().locator(WidgetPage.selector.HEADER_TEXT);
+  }
+
+  openButton(): Locator {
+    return this.wrapper().locator(WidgetPage.selector.BUTTON_OPEN);
+  }
+
+  writeToUsButton(): Locator {
+    return this.wrapper().getByRole('button', { name: "написать нам"});
+  }
+
+  popularArticles(): Locator {
+    return this.wrapper().locator(WidgetPage.selector.ARTICLE_POPULAR_LIST_ITEM);
+  }
+
+  async openWidget(): Promise<void> {
+    await this.openButton().click();
+    await expect(this.widgetBody()).toBeVisible();
+  }
+
+    async openFirstPopularArticle(): Promise<void> {
+    const firstArticle = this.popularArticles().first();
+    await expect(firstArticle).toBeVisible();
+    await firstArticle.click();
+  }
+
+  async clickWriteToUs(): Promise<void> {
+    await expect(this.writeToUsButton()).toBeVisible();
+    await this.writeToUsButton().click();
+  }
+
+  async handleCookieConsent(): Promise<void> {
+    const cookieButton = this.page.getByText("OK", {exact: true}).first();
+    if (await cookieButton.isVisible().catch(() => false)) {
+      await cookieButton.click();
+      await expect(cookieButton).toBeHidden();
     }
-
-    async openWidget() {
-        return this.wrapper().locator(WidgetPage.selector.BUTTON_OPEN).click();
-    }
-
-    async getPopularArticles() {
-        return this.wrapper().locator(WidgetPage.selector.ARTICLE_POPULAR_LIST_ITEM).all()
-    }
-
-    async clickWriteToUs() {
-        return this.wrapper().locator(WidgetPage.selector.BUTTON_WRITE_TO_US).click();
-    }
-
-    async getTitle() {
-        return this.wrapper().locator(WidgetPage.selector.HEADER_TEXT).textContent();
-    }
-
-    getWidgetBody() {
-        return this.page.locator(WidgetPage.selector.WIDGET_BODY);
-    }
+  }
 }
-
